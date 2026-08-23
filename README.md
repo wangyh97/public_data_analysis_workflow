@@ -1,7 +1,7 @@
 # public_data_analysis
 
 可扩展、模块化、配置驱动、可复现的公共生物医学数据分析框架。
-当前实现 **TCGA**（第一个 dataset adapter）+ **correlation** 分析 + **correlation plot**；
+当前实现 **TCGA**（第一个 dataset adapter）+ 两个通用分析模块（**correlation**、**survival**）及其画图模块；
 架构天然支持未来加入 CPTAC / PRECOG / GEO / 免疫治疗队列 / 蛋白组学而无需改动通用模块。
 
 - 语言：R（base R 优先，兼容 HPC `module load R/4.2.0-container`）
@@ -40,7 +40,9 @@ config/
   gene_sets/antigen_presentation.txt
 datasets/tcga/                 # TCGA adapter：download.R / prepare.R / validate.R
 analyses/correlation/          # 相关分析模块（dataset-agnostic）
+analyses/survival/             # 生存分析模块（log-rank + Cox per SD，dataset-agnostic）
 plotting/correlation/          # 热图模块（只读结果表，不重算）
+plotting/survival/             # KM 曲线 + 森林图模块（只读结果表）
 utils/                         # cli / logging / io / config / validation / gene_id
 workflow/Snakefile             # PoC：仅依赖编排
 tests/                         # 冒烟测试（暂缓，见 §9）

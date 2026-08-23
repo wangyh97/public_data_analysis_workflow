@@ -1,0 +1,41 @@
+# ============================================================================
+# Example analysis configuration -- survival
+#
+# Reads clinical.rds produced by any adapter that fills the standard fields.
+# Endpoint columns are <endpoint>_time / <endpoint>_event in clinical.rds
+# (OS available for TCGA via Xena survival table; PFS/DSS/DFI currently NA).
+# ============================================================================
+
+analysis:
+  name: mettl3_os_tcga_skcm
+  type: survival
+
+datasets:
+  - source: TCGA
+    cohort: SKCM
+  # - source: TCGA
+  #   cohort: COADREAD      # works once prepared; cohort code must exist in data
+
+targets:
+  genes:
+    - METTL3
+  # geneset_file: config/gene_sets/rbp_panel.txt   # one KM/HR set per gene
+
+survival:
+  endpoint: OS               # OS | PFS | DSS | DFI (must exist in clinical.rds)
+  time_unit_note: days       # recorded only; no transform applied
+  split_method: median       # median | fixed
+  cutoff: null               # used only when split_method=fixed (raw expression)
+  covariates: []             # e.g. [age, sex] -- absent fields warn & drop
+  models:
+    - logrank                # Kaplan-Meier High vs Low comparison
+    - cox_univariate         # HR per 1 SD of expression
+    # - cox_adjusted         # adds covariates; requires non-empty covariates
+  min_patients: 20           # hard floor per block; below => loud failure
+  min_n: 10                  # complete-case floor per model
+  min_samples_per_group: 5   # log-rank group floor
+  adjust_method: BH          # BH | HOLM | NONE
+                             # family = dataset x cohort x target x model
+
+output:
+  root: "${PDA_RESULTS_ROOT}"
