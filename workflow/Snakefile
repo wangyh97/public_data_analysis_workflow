@@ -1,0 +1,93 @@
+# =============================================================================
+# Snakefile -- minimal proof-of-concept (download -> prepare -> analyze -> plot)
+#
+# SCOPE: dependency wiring only. All real logic lives in the R scripts.
+#
+# Usage (from the project root):
+#   export PDA_DATA_ROOT=/data/public_data
+#   export PDA_RESULTS_ROOT=/project/results
+#   snakemake -n                       # dry run: inspect the DAG
+#   snakemake --cores 1                # run locally
+#
+# The analysis config drives the DAG: one prepare job per dataset entry listed
+# in the analysis YAML; cohorts=[] in tcga.yaml means "all", so Snakemake relies
+# on the analysis config to enumerate concrete cohort targets.
+# =============================================================================
+
+import os
+
+configfile: "config/analyses/correlation_example.yaml"
+
+DATA_ROOT    = os.environ.get("PDA_DATA_ROOT", "data")
+RESULTS_ROOT = os.environ.get("PDA_RESULTS_ROOT", "results")
+
+ANALYSIS_CFG   = "config/analyses/correlation_example.yaml"
+DATASET_CFG    = "config/datasets/tcga.yaml"
+PLOT_CFG       = "config/plotting/default.yaml"
+
+ANALYSIS_NAME  = config["analysis"]["name"]
+DATASET_ENTRIES = [(d["source"], d["cohort"]) for d in config["datasets"]]
+TCGA_COHORTS    = [c for s, c in DATASET_ENTRIES if s.upper() == "TCGA"]
+
+RAW_MANIFEST = f"{DATA_ROOT}/raw/TCGA/manifest.yaml"
+
+
+def processed_manifest(source, cohort):
+    return f"{DATA_ROOT}/processed/{source}/{cohort}/manifest.yaml"
+
+
+rule all:
+    input:
+        expand(f"{RESULTS_ROOT}/{ANALYSIS_NAME}/figures/correlation_heatmap.{{ext}}",
+               ext=["pdf", "png"])
+
+
+rule tcga_download:
+    input:
+        cfg=DATASET_CFG
+    output:
+        RAW_MANIFEST
+    log:
+        f"{DATA_ROOT}/raw/TCGA/logs/download.log"
+    shell:
+        "Rscript datasets/tcga/download.R --config {input.cfg}"
+
+
+rule tcga_prepare:
+    input:
+        raw=RAW_MANIFEST,
+        cfg=DATASET_CFG
+    output:
+        lambda wc: processed_manifest("TCGA", wc.cohort)
+    params:
+        cohort=lambda wc: wc.cohort
+    shell:
+        "Rscript datasets/tcga/prepare.R --config {input.cfg} --cohorts {params.cohort}"
+
+
+rule correlate:
+    input:
+        manifests=[processed_manifest(s, c) for s, c in DATASET_ENTRIES],
+        cfg=ANALYSIS_CFG
+    output:
+        table=f"{RESULTS_ROOT}/{ANALYSIS_NAME}/tables/correlation_results.tsv",
+        meta=f"{RESULTS_ROOT}/{ANALYSIS_NAME}/metadata/analysis_metadata.yaml"
+    log:
+        f"{RESULTS_ROOT}/{ANALYSIS_NAME}/logs/run.log"
+    shell:
+        "Rscript analyses/correlation/run.R --config {input.cfg}"
+
+
+rule plot_correlation:
+    input:
+        table=f"{RESULTS_ROOT}/{ANALYSIS_NAME}/tables/correlation_results.tsv",
+        pcfg=PLOT_CFG
+    output:
+        expand(f"{RESULTS_ROOT}/{ANALYSIS_NAME}/figures/correlation_heatmap.{{ext}}",
+               ext=["pdf", "png"])
+    log:
+        f"{RESULTS_ROOT}/{ANALYSIS_NAME}/figures/plot.log"
+    shell:
+        "Rscript plotting/correlation/plot.R --input {input.table} "
+        "--plot-config {input.pcfg} --out-dir $(dirname {output}) "
+        # plot.R writes its own log next to figures; snakemake log is best-effort

@@ -1,0 +1,28 @@
+# ============================================================================
+# Default plotting configuration (shared by plot modules)
+#
+# Changing this file must NEVER trigger re-analysis: plots read result tables.
+# ============================================================================
+
+figure:
+  formats: [pdf, png]
+  dpi: 600
+  width_in: 9
+  height_in: 5
+
+heatmap:
+  font_size: 10
+  color_low: "#2166AC"
+  color_mid: "#F7F7F7"
+  color_high: "#B2182B"
+  na_color: "#BEBEBE"
+  limits: [-1.0, 1.0]          # fixed symmetric scale for correlation coefficients
+  midpoint: 0.0
+  annotate_values: true
+  value_digits: 2
+
+significance_marks:
+  # first threshold met (scanning top-down) determines the mark; empty = none
+  - {threshold: 0.001, mark: "***"}
+  - {threshold: 0.01,  mark: "**"}
+  - {threshold: 0.05,  mark: "*"}

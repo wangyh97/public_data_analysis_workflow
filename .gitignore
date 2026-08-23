@@ -1,0 +1,17 @@
+# ---- R artifacts ----
+.Rhistory
+.RData
+.Rproj.user
+*.Rproj
+
+# ---- Local scratch (never commit data or results) ----
+work/
+data/
+results/
+logs/
+*.log
+
+# ---- OS noise ----
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,42 @@
+# ============================================================================
+# Dataset registry -- single source of truth for "what data sources exist".
+#
+# Adding a future source (CPTAC, PRECOG, GEO, immunotherapy cohorts, ...):
+#   1. create datasets/<source>/{download.R, prepare.R, ...}
+#   2. register it here with status: active
+#   3. satisfy the standardized processed-data contract (see README)
+# Analysis modules never need to change.
+# ============================================================================
+
+registry_version: 1
+
+defaults:
+  processed_layout: "{processed_root}/{source}/{cohort}"
+
+datasets:
+
+  TCGA:
+    adapter: datasets/tcga
+    description: "TCGA pan-cancer, UCSC Xena Toil-harmonized RNA-seq"
+    status: active
+    modalities: [transcriptomics, clinical]
+    cohort_level: cancer_type
+    processed_layout: "{processed_root}/TCGA/{cohort}"
+
+  CPTAC:
+    adapter: datasets/cptac
+    description: "CPTAC proteomics (planned)"
+    status: planned
+    modalities: [proteomics, clinical]
+
+  PRECOG:
+    adapter: datasets/precog
+    description: "PRECOG survival/transcriptomics (planned)"
+    status: planned
+    modalities: [transcriptomics, survival]
+
+  GEO:
+    adapter: datasets/geo
+    description: "GEO series (planned)"
+    status: planned
+    modalities: [transcriptomics, clinical]

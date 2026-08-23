@@ -1,0 +1,53 @@
+# ============================================================================
+# Example analysis configuration -- correlation
+#
+# Describes what to DO with already-prepared data.
+# Gene selection lives HERE (never in the dataset config).
+# ============================================================================
+
+analysis:
+  name: mettl3_mhci_tcga_skcm        # output folder name under results root
+  type: correlation
+
+datasets:
+  - source: TCGA
+    cohort: SKCM
+  # - source: TCGA
+  #   cohort: LUAD
+  # - source: CPTAC          # future adapters work without changing this module
+  #   cohort: CRC
+
+targets:
+  genes:
+    - METTL3
+  # geneset_file: config/gene_sets/m6a_writers.txt    # alternative/complement
+
+comparison:
+  # inline list...
+  genes:
+    - B2M
+    - HLA-A
+    - HLA-B
+    - HLA-C
+    - TAP1
+    - TAP2
+    - TAPBP
+    - CALR
+    - CANX
+    - PSMB8
+    - PSMB9
+    - PSMB10
+    - ERAP1
+    - ERAP2
+    - NLRC5
+  # ...or a gene-set file (both may be combined):
+  # geneset_file: config/gene_sets/antigen_presentation.txt
+
+correlation:
+  method: spearman            # spearman | pearson
+  adjust_method: BH           # BH | holm | none
+  adjust_family: target_gene  # p-values adjusted within each dataset x cohort x target_gene
+  min_n: 10                   # pairs below this n are reported with status=insufficient_n
+
+output:
+  root: "${PDA_RESULTS_ROOT}"   # results/<analysis.name>/ is created inside

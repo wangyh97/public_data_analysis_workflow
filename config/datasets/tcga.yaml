@@ -1,0 +1,87 @@
+# ============================================================================
+# TCGA dataset configuration
+#
+# Describes WHAT the data is and HOW to obtain/prepare it.
+# Gene selection does NOT belong here (it belongs to analysis configs).
+#
+# Paths reference environment variables; override per machine:
+#   export PDA_DATA_ROOT=/data/public_data
+# ============================================================================
+
+dataset:
+  source: TCGA
+  title: "TCGA pan-cancer RNA-seq (UCSC Xena Toil harmonized)"
+  description: >
+    Harmonized TCGA (+GTEx normal tissue) gene-expression matrix from the
+    UCSC Toil recompute hub. Values are log2(TPM + 0.001). Downloaded once as a
+    bulk file and reused; raw files are never modified in place.
+
+paths:
+  raw_root: "${PDA_DATA_ROOT}/raw/TCGA"
+  processed_root: "${PDA_DATA_ROOT}/processed/TCGA"
+  cache_root: "${PDA_DATA_ROOT}/cache/TCGA"
+
+download:
+  http_timeout_seconds: 3600
+  files:
+
+    expression_tpm:
+      filename: TcgaTargetGtex_rsem_gene_tpm.gz
+      url: https://toil-xena-hub.s3.us-east-1.amazonaws.com/download/TcgaTargetGtex_rsem_gene_tpm.gz
+      description: "Bulk expression matrix, log2(tpm+0.001), rows=Ensembl gene IDs, cols=samples"
+      approx_bytes: 1323254426
+
+    phenotype:
+      filename: TcgaTargetGTEX_phenotype.txt.gz
+      url: https://toil-xena-hub.s3.us-east-1.amazonaws.com/download/TcgaTargetGTEX_phenotype.txt.gz
+      description: "Per-sample metadata: _sample_type, _primary_site, _study, _gender, ..."
+
+    survival:
+      filename: TCGA_survival_data.tsv
+      url: https://toil-xena-hub.s3.us-east-1.amazonaws.com/download/TCGA_survival_data
+      description: "Patient-level overall survival: sample, _PATIENT, OS(event), OS.time(days)"
+
+    probemap:
+      filename: gencode.v23.annotation.gtf.probemap
+      url: https://toil.xenahubs.net/download/probeMap/gencode.v23.annotation.gtf.probemap
+      description: "Ensembl(with version) -> gene symbol map used during prepare"
+
+prepare:
+  # Which TCGA project cohorts to emit under processed/TCGA/<cohort>/ .
+  # Empty list => derive all available TCGA cohorts from the phenotype table.
+  cohorts: []
+  sample_types: ["Primary Tumor", "Solid Tissue Normal"]
+  include_non_tcga: false          # GTEx / TARGET rows are excluded by default
+  one_sample_per_patient: true
+  sample_type_priority: ["Primary Tumor", "Recurrent Tumor", "Metastatic", "Solid Tissue Normal"]
+  gene_identifier: symbol           # symbol | ensembl  (output feature label)
+  strip_ensembl_version: true
+  duplicate_gene_policy: max_iqr    # max_iqr | max_variance | first_lexical
+  drop_features_with_na_above: 1.0  # 1.0 = never drop; lower to prune sparse features
+
+expression:
+  unit: "log2(TPM+0.001)"           # passthrough from source; no hidden transform
+  orientation_after_prepare: "feature x sample"
+
+clinical:
+  standard_fields:
+    - sample_id
+    - patient_id
+    - cohort
+    - cancer_type
+    - sample_type
+    - OS_time
+    - OS_event
+    - PFS_time
+    - PFS_event
+    - DSS_time
+    - DSS_event
+    - DFI_time
+    - DFI_event
+    - age
+    - sex
+    - stage
+    - response
+    - treatment
+
+pipeline_version: "0.1.0"
