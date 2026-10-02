@@ -41,9 +41,14 @@ datasets:
     status: planned
     modalities: [transcriptomics, clinical]
 
-  GEO_SC_CRC:
-    adapter: datasets/geo_sc_crc
-    description: "CRC single-cell treatment-response panels (GSE236581/GSE205506)"
-    status: active
+  CellResDB:
+    adapter: datasets/cellresdb
+    description: "CellResDB portal (source-wide adapter planned; CRC case is under examples/crc)"
+    status: planned
     modalities: [single_cell_transcriptomics, clinical, treatment_response]
-    cohort_level: study
+
+  scCTDB:
+    adapter: datasets/scctdb
+    description: "scCT-DB portal (source-wide adapter planned; CRC case is under examples/crc)"
+    status: planned
+    modalities: [single_cell_transcriptomics, clinical, treatment_response]

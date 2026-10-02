@@ -1,0 +1,10 @@
+{
+  "targets": ["METTL3", "STRAP", "PTBP1"],
+  "minimum_cells_per_patient_timepoint": 30,
+  "minimum_pairs_for_test": 3,
+  "normalization": "log2(1 + summed_target_counts / summed_full_gene_library * 1000000)",
+  "pooling": "sum all malignant-labelled cells across tumor specimens within patient and recorded treatment stage",
+  "trajectory_eligibility": "eligible baseline and at least one eligible post-treatment stage",
+  "timepoints": {"GSE236581": ["Pre", "II", "III", "IV"], "GSE205506": ["Pre", "Post"]},
+  "response_endpoints": {"GSE236581": "RECIST: R=CR/PR, NR=SD/PD", "GSE205506": "R=pCR, NR=non-pCR"}
+}

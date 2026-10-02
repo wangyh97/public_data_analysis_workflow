@@ -1,0 +1,16 @@
+{
+  "seed": 20260905,
+  "max_cells_per_sample_group": 300,
+  "min_group_cells": 20,
+  "min_malignant_cells": 30,
+  "nboot": 100,
+  "type": "triMean",
+  "population_size": false,
+  "raw_use": true,
+  "cohort_stage": "Pre",
+  "database": "CellChatDB.human; protein signaling only (exclude Non-protein Signaling)",
+  "inference_unit": "original tumor sample; equal sample mean within patient",
+  "test_unit": "patient",
+  "min_patients_each_high_low": 3,
+  "permutations": 10000
+}

@@ -1,7 +1,0 @@
-source: GEO_SC_CRC
-panel_root: "${CRC_PANEL_ROOT}"
-studies: [GSE236581, GSE205506]
-genes: [METTL3, STRAP, PTBP1]
-response_endpoints:
-  GSE236581: RECIST
-  GSE205506: pCR_non_pCR

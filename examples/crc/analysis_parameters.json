@@ -1,0 +1,81 @@
+{
+  "targets": [
+    "METTL3",
+    "STRAP",
+    "PTBP1"
+  ],
+  "seed": 20260905,
+  "normalization": "log1p(raw counts / full-gene library size * 10000)",
+  "min_tumor_cells": 30,
+  "min_T_cells": 20,
+  "min_sample_cells_for_composition": 200,
+  "min_patients_correlation": 6,
+  "min_patients_per_response_group": 3,
+  "min_patients_adjusted_correlation": 10,
+  "bootstrap_replicates": 1000,
+  "primary_timepoint": "Pre",
+  "primary_tumor_definition": "author/database explicitly malignant epithelial annotation",
+  "QC_mode": "reuse deposited processed/QC-filtered cells; inspect QC metrics, no new hard filtering or doublet-calling claim",
+  "gene_sets": {
+    "MHC_I_core": [
+      "HLA-A",
+      "HLA-B",
+      "HLA-C",
+      "B2M"
+    ],
+    "APM": [
+      "TAP1",
+      "TAP2",
+      "TAPBP",
+      "NLRC5",
+      "PSMB8",
+      "PSMB9",
+      "PSMB10",
+      "ERAP1",
+      "ERAP2"
+    ],
+    "IFN": [
+      "IRF1",
+      "STAT1",
+      "ISG15",
+      "IFI6",
+      "IFIT1",
+      "IFIT3",
+      "MX1",
+      "OAS1"
+    ],
+    "Cycle": [
+      "MKI67",
+      "TOP2A",
+      "PCNA",
+      "TYMS"
+    ],
+    "Cytotoxic": [
+      "PRF1",
+      "GZMA",
+      "GZMB",
+      "GZMH",
+      "NKG7",
+      "CCL5"
+    ],
+    "Dysfunction": [
+      "PDCD1",
+      "LAG3",
+      "HAVCR2",
+      "TIGIT",
+      "TOX",
+      "ENTPD1"
+    ],
+    "Stem_memory": [
+      "TCF7",
+      "CCR7",
+      "IL7R",
+      "LEF1"
+    ],
+    "Treg": [
+      "FOXP3",
+      "IL2RA",
+      "CTLA4"
+    ]
+  }
+}

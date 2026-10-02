@@ -1,12 +1,31 @@
 # public_data_analysis
 
 可扩展、模块化、配置驱动、可复现的公共生物医学数据分析框架。
-当前实现 **TCGA**（第一个 dataset adapter）+ **GEO_SC_CRC** 单细胞适配层，以及两个通用分析模块（**correlation**、**survival**）及其画图模块；
-架构天然支持未来加入 CPTAC / PRECOG / GEO / 免疫治疗队列 / 蛋白组学而无需改动通用模块。
+当前有可运行的 TCGA adapter、通用 correlation/survival 模块，以及完整版本化的 CRC 单细胞研究案例（含旧版图、CellChat 和新版 Fig1–Fig3）。后者位于 `examples/crc/`；GEO、CellResDB 和 scCT-DB 是数据来源，CRC 和 GSE 编号是研究选择，不作为通用 adapter 名称。
+以下第 1–11 节记录原有 TCGA 工作流的接口和示例；CRC 案例使用独立的版本化入口。GEO、CellResDB、scCT-DB 的来源级通用 adapter 尚待实现，不能仅替换 GSE 编号就复用 CRC 案例脚本。
+
+先读 [文档导航](docs/README.md) 和 [CRC 案例运行说明](examples/crc/README.md)。历史运行可用 `python workflow/replay.py --manifest <run_manifest.json>` 重放。
 
 - 语言：R（base R 优先，兼容 HPC `module load R/4.2.0-container`）
 - 依赖：`yaml` 必需；`data.table` 强烈建议；`ggplot2` 仅画图需要
 - 工作流：Snakemake-ready（PoC 已附），但不强依赖 Snakemake
+
+---
+
+## 先选择运行入口
+
+| 需求 | 入口 | 说明 |
+|---|---|---|
+| TCGA 相关性或生存分析 | `datasets/tcga/` → `analyses/` → `plotting/` | 使用标准化 bulk 表达/临床数据契约 |
+| 完整复现本次 CRC 研究全部图表 | [`examples/crc/run.py`](examples/crc/README.md) | 版本化的研究案例；原始矩阵在仓库外 |
+| 一键重放某次历史运行 | `python workflow/replay.py --manifest <run_manifest.json>` | 按该次 Git 版本及参数重跑，先检查输入身份 |
+| 增加新研究 | [`docs/how_to/run_new_study.md`](docs/how_to/run_new_study.md) | 选择来源和 accession，复用已有模块 |
+| 增加来源、分析或图型 | [`docs/how_to/`](docs/README.md) | 按数据契约实现相应模块 |
+
+日常路径通过命令行传入；相对稳定的科学规则留在配置文件。每次运行产生
+`run_manifest.json`，记录实际使用的路径、规则、代码版本、步骤和日志。
+`examples/crc/` 的脚本固定解释这次研究所用的已发表注释；未来的 GEO 数据
+应由按来源/文件格式开发的通用 adapter 处理，不能只替换一个 GSE 编号。
 
 ---
 
@@ -39,10 +58,13 @@ config/
   plotting/default.yaml
   gene_sets/antigen_presentation.txt
 datasets/tcga/                 # TCGA adapter：download.R / prepare.R / validate.R
+processing/                    # 模块间数据契约及通用处理规则
 analyses/correlation/          # 相关分析模块（dataset-agnostic）
 analyses/survival/             # 生存分析模块（log-rank + Cox per SD，dataset-agnostic）
 plotting/correlation/          # 热图模块（只读结果表，不重算）
 plotting/survival/             # KM 曲线 + 森林图模块（只读结果表）
+examples/crc/                  # 版本化 CRC 研究案例及全部图表生成代码
+docs/                          # 长期通用的架构、数据契约、扩展指南
 utils/                         # cli / logging / io / config / validation / gene_id
 workflow/Snakefile             # PoC：仅依赖编排
 tests/                         # 冒烟测试（暂缓，见 §9）
@@ -50,7 +72,7 @@ tests/                         # 冒烟测试（暂缓，见 §9）
 
 ## 3. 数据目录与代码分离（强制）
 
-代码仓库不含数据。两个环境变量决定一切落盘位置：
+代码仓库不含大矩阵。TCGA 现有模块支持下列环境变量；新入口优先通过命令行接收路径，并把生效值写入 run manifest：
 
 ```bash
 export PDA_DATA_ROOT=/data/public_data     # raw/ processed/ cache/ 的根
@@ -144,7 +166,7 @@ CLI 规范：非交互、cwd 无关、`--help`、exit 0/1/2、fail loudly、原�
 
 ## 9. 测试状态（当前阶段）
 
-按约定本阶段**未建自动化测试**。建议下一步在 HPC 上做冒烟：
+TCGA 模块尚未在本次重构中重新运行。CRC 案例已在现有数据上重绘和校验，执行范围详见 `examples/crc/README.md`。建议下一步在 HPC 上对 TCGA 做冒烟：
 小 cohort（如 SKCM）走完 download→prepare→validate→analyze→plot，
 再验证：缺基因仅告警；改 plot config 只有 plot 重跑；改 analysis config 重跑 analyze+plot；
 Snakemake `-n` DAG 符合预期。

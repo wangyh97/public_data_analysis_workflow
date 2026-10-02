@@ -1,0 +1,55 @@
+{
+  "panel_type": "MHC",
+  "targets": [
+    "METTL3",
+    "STRAP",
+    "PTBP1"
+  ],
+  "gene_sets": {
+    "MHC_I_structure": [
+      "HLA-A",
+      "HLA-B",
+      "HLA-C",
+      "B2M"
+    ],
+    "Immunoproteasome": [
+      "PSMB8",
+      "PSMB9",
+      "PSMB10"
+    ],
+    "Peptide_transport": [
+      "TAP1",
+      "TAP2"
+    ],
+    "ER_peptide_trimming": [
+      "ERAP1",
+      "ERAP2"
+    ],
+    "Folding_and_loading": [
+      "TAPBP",
+      "CALR",
+      "CANX",
+      "PDIA3"
+    ],
+    "Transcriptional_regulators": [
+      "NLRC5",
+      "STAT1",
+      "IRF1",
+      "NFKB1",
+      "NFKB2",
+      "RELA",
+      "RELB",
+      "REL"
+    ]
+  },
+  "minimum_tumor_cells": 30,
+  "minimum_T_cells": 20,
+  "minimum_patients": 6,
+  "bootstrap_replicates": 2000,
+  "seed": 20260907,
+  "normalization": "mean(log1p(counts / full_gene_library * 10000))",
+  "cohort_order": [
+    "GSE236581",
+    "GSE205506"
+  ]
+}

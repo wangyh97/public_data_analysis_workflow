@@ -1,0 +1,81 @@
+"""Generate Chinese result report directly from completed patient statistics."""
+from pathlib import Path
+import pandas as pd
+import hashlib,json
+ROOT=Path(__file__).resolve().parents[1]
+r=pd.read_csv(ROOT/'tables/cellchat_patient_high_low_tests.csv')
+a=pd.read_csv(ROOT/'audit/cellchat_completed_samples.csv')
+assert len(a)==27 and a.job.nunique()==27
+f=r[(r.metric=='strength')&(r.pathway=='MHC_I_classical_CD8')&(r.source=='Malignant')&(r.target=='CD8_T')]
+def fmt(x):return f'{x:.3g}'
+rows=['| 研究 | 基因 | High/Low n | High−Low 均值差 | 患者置换 P | focused q | 连续 rho | focused q（相关） |',
+      '|---|---|---:|---:|---:|---:|---:|---:|']
+for _,x in f.sort_values(['study','gene']).iterrows():
+ rows.append(f'| {x.study} | {x.gene} | {x.n_high}/{x.n_low} | {fmt(x.mean_high-x.mean_low)} | {fmt(x.p_patient_permutation)} | {fmt(x.q_focused_MHC_permutation)} | {fmt(x.rho)} | {fmt(x.q_focused_MHC_spearman)} |')
+sig=r[(r.metric=='strength')&(r.q_patient_permutation<.05)]
+corsig=r[(r.metric=='strength')&(r.q_spearman<.05)]
+focus_sig=f[(f.q_focused_MHC_permutation<.05)|(f.q_focused_MHC_spearman<.05)]
+conclusion=('经典 HLA-A/B/C→CD8A/B 的 focused 检验未检出通过 FDR 的关联或 High/Low 差异。' if focus_sig.empty else
+            '经典 HLA-A/B/C→CD8A/B 的 focused 检验存在通过 FDR 的项目，需结合下表方向、独立研究复现和尺度敏感性解读。')
+body=f'''# CellChat 补充结果
+
+**本次已实际完成 CellChat：27/27 个治疗前肿瘤样本，两个独立研究，46,015 个固定抽样细胞。** 每个样本分别推断，不把所有 High 或 Low 患者混成一个细胞池。
+
+{conclusion}
+
+## 1. 执行和质量核查
+
+- GSE236581：19 位患者；GSE205506：8 位患者。
+- 每个样本的完整基因矩阵均核对文库大小及三个候选基因计数，与前一轮独立提取逐细胞一致。
+- 全部样本产生有效 CellChat 概率数组，概率有限且非负、内部 P 值在 [0,1]。
+- 数据库固定为 CellChat 2.2.0.9001 随包人类蛋白通讯部分；完整条目、真实函数源码和运行参数已存档。
+- 每样本识别 {a.n_LR_tested.min()}–{a.n_LR_tested.max()} 个候选 LR、检出 {a.n_pathways_detected.min()}–{a.n_pathways_detected.max()} 个通路。候选筛选为该固定 CellChat 版本的默认流程，候选集合可能随样本变化。
+
+## 2. 与研究问题最直接相关的经典 MHC-I 项
+
+这里仅合计 HLA-A/B/C→CD8A/B 的经典六种边，发送群为 Malignant、接收群为 CD8_T。三个目标基因为每研究一个 focused family；它与全通路探索的 q 值分开报告。
+
+{chr(10).join(rows)}
+
+High/Low 分组来自此前固定的恶性细胞候选基因表达中位数。均值差单位为 CellChat 模型强度，不是 HLA 蛋白量、抗原肽数量或 T 细胞杀伤能力。小样本患者分组组合数不超过 10,000 时枚举全部组合，否则使用 10,000 次 Monte Carlo 置换。
+
+**GSE205506 的三个基因恰好产生完全相同的 4 High / 4 Low 患者分组**，因此相同的组间差异不是三份独立证据。该队列的负向信号没有在 GSE236581 的 19 位患者中复现；除以全网络总强度后，相对强度的 focused 检验也未通过 FDR。应作为小样本、依赖分数尺度的探索线索，而非三个基因已获独立验证的抗原呈递机制。
+
+## 3. 全通路探索和尺度敏感性
+
+原始强度的全通路、三基因、六方向探索 family 中，患者 High/Low 置换检验通过 q<0.05 的项目为 **{len(sig)}** 项；连续表达 Spearman 通过 q<0.05 的项目为 **{len(corsig)}** 项。这两类检验分别校正，不能互换 q 值。
+
+所有检验（包括相对强度敏感性）共 {len(r):,} 行，见 `tables/cellchat_patient_high_low_tests.csv`。相对强度为各通路强度除以该患者全部细胞群网络的总通路强度，属于组成性指标，主要用于检查每样本缩放的影响；不是独立验证队列。
+
+缺失细胞群未补零；有细胞群但未通过 CellChat 推断门槛的边计为模型未检出。每组少于 3 位患者的比较不检验，资格表见 `tables/cellchat_comparison_eligibility.csv`。
+
+## 4. 图表与原始结果
+
+- `figures/09_CellChat_pathway_*.pdf`：预先固定的免疫通讯面板，显示患者级连续 rho，星号使用全通路探索 q。
+- `figures/10_CellChat_MHC_I_patient_points.pdf`：完整数据库 MHC-I 与经典 HLA/CD8 六边的 High/Low 原始患者点。
+- `figures/11_CellChat_network_*.pdf`：患者平均的肿瘤发送/接收网络，属于描述性图，不把组平均颜色当显著性。
+- `tables/cellchat_sample_pathway_strength.csv` 和 `cellchat_patient_pathway_strength.csv`：完整样本/患者通路值。
+- `tables/cellchat_significant_LR_edges.csv.gz`：涉及肿瘤的 LR 概率与 CellChat 内部 P；后者不是患者组间 P。
+- `derived/CellChat/`：每样本准确的 net、netP、LR、options、细胞数和全基因文库大小。
+
+## 5. 对文章结论的影响
+
+CellChat “MHC-I” 数据库通路还包含非经典 HLA、NK 受体和压力配体；不能把整个通路写成抗原特异性呈递。即使某项显著，也只提示转录层面的模型通讯差异，需要排除 IFN、增殖、治疗方案和细胞状态差异，并经独立队列及功能实验验证。
+
+前一轮 MHC/APM 患者相关和基线 R/NR 比较的结果保持原样。CellChat 应作为额外探索层，不能用于推翻或隐藏已有阴性结果。本次没有新增受控 FASTQ 下载、doublet/ambient RNA 重分析，也没有运行不必要的慢速参考读取器全量步骤。
+
+具体版本、构建版本警告、输入定义、参数和复现命令见 `CellChat运行与设计.md`、`cellchat_config.json`、`run_cellchat.ps1`。图中箱线为中位数、IQR 和 1.5 IQR 范围的须，点为独立患者。
+'''
+if len(sig):
+ body+='\n## 全通路 High/Low 通过 FDR 的项目\n\n'+sig[['study','gene','source','target','pathway','p_patient_permutation','q_patient_permutation']].to_csv(index=False)+'\n'
+(ROOT/'CellChat补充报告.md').write_text(body,encoding='utf-8')
+# Fingerprint frozen selection, configuration, database and downloaded package.
+files=[ROOT/'cellchat_config.json',ROOT/'data/CellChat/selected_cells.csv',ROOT/'data/CellChat/CellChatDB_protein_locked.rds']+list((ROOT/'runtime/downloads').glob('*.zip'))
+manifest=[]
+for file in files:
+ h=hashlib.sha256()
+ with file.open('rb') as stream:
+  while b:=stream.read(8*1024**2):h.update(b)
+ manifest.append(dict(file=str(file.relative_to(ROOT)),bytes=file.stat().st_size,sha256=h.hexdigest()))
+(ROOT/'audit/cellchat_fingerprints.json').write_text(json.dumps(manifest,indent=2))
+print('REPORT COMPLETE; focused significant',len(focus_sig),'exploratory high-low',len(sig),'correlation',len(corsig))

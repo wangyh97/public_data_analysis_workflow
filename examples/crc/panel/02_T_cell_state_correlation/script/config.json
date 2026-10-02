@@ -1,0 +1,47 @@
+{
+  "panel_type": "T",
+  "targets": [
+    "METTL3",
+    "STRAP",
+    "PTBP1"
+  ],
+  "gene_sets": {
+    "Cytotoxic": [
+      "PRF1",
+      "GZMA",
+      "GZMB",
+      "GZMH",
+      "NKG7",
+      "CCL5"
+    ],
+    "Dysfunction": [
+      "PDCD1",
+      "LAG3",
+      "HAVCR2",
+      "TIGIT",
+      "TOX",
+      "ENTPD1"
+    ],
+    "Stem_memory": [
+      "TCF7",
+      "CCR7",
+      "IL7R",
+      "LEF1"
+    ],
+    "Treg": [
+      "FOXP3",
+      "IL2RA",
+      "CTLA4"
+    ]
+  },
+  "minimum_tumor_cells": 30,
+  "minimum_T_cells": 20,
+  "minimum_patients": 6,
+  "bootstrap_replicates": 2000,
+  "seed": 20260907,
+  "normalization": "mean(log1p(counts / full_gene_library * 10000))",
+  "cohort_order": [
+    "GSE236581",
+    "GSE205506"
+  ]
+}
