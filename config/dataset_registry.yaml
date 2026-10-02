@@ -40,3 +40,10 @@ datasets:
     description: "GEO series (planned)"
     status: planned
     modalities: [transcriptomics, clinical]
+
+  GEO_SC_CRC:
+    adapter: datasets/geo_sc_crc
+    description: "CRC single-cell treatment-response panels (GSE236581/GSE205506)"
+    status: active
+    modalities: [single_cell_transcriptomics, clinical, treatment_response]
+    cohort_level: study

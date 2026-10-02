@@ -1,7 +1,7 @@
 # public_data_analysis
 
 可扩展、模块化、配置驱动、可复现的公共生物医学数据分析框架。
-当前实现 **TCGA**（第一个 dataset adapter）+ 两个通用分析模块（**correlation**、**survival**）及其画图模块；
+当前实现 **TCGA**（第一个 dataset adapter）+ **GEO_SC_CRC** 单细胞适配层，以及两个通用分析模块（**correlation**、**survival**）及其画图模块；
 架构天然支持未来加入 CPTAC / PRECOG / GEO / 免疫治疗队列 / 蛋白组学而无需改动通用模块。
 
 - 语言：R（base R 优先，兼容 HPC `module load R/4.2.0-container`）

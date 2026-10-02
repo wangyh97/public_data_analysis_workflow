@@ -1,0 +1,16 @@
+import os
+
+configfile: "config/analyses/crc_single_cell.yaml"
+RESULTS_ROOT = os.environ.get("PDA_RESULTS_ROOT", "results")
+NAME = config["analysis"]["name"]
+
+rule all:
+    input: f"{RESULTS_ROOT}/{NAME}/metadata/provenance.txt"
+
+rule crc_single_cell_panels:
+    output: f"{RESULTS_ROOT}/{NAME}/metadata/provenance.txt"
+    params:
+        cfg="config/analyses/crc_single_cell.yaml",
+        panel_root=os.environ.get("CRC_PANEL_ROOT", "")
+    shell:
+        "Rscript analyses/crc_single_cell/run.R --config {params.cfg} --panel-root '{params.panel_root}' --output-root '{RESULTS_ROOT}'"

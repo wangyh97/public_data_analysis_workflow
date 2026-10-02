@@ -1,0 +1,15 @@
+analysis:
+  name: crc_single_cell_panels
+  type: crc_single_cell
+  output:
+    root: "${PDA_RESULTS_ROOT}"
+dataset:
+  source: GEO_SC_CRC
+  config: config/datasets/geo_sc_crc.yaml
+panels:
+  - 01_MHC_I_correlation
+  - 02_T_cell_state_correlation
+  - 03_tumor_treatment_trajectories
+execution:
+  run_processing: true
+  run_plotting: true

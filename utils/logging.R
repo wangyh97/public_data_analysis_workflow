@@ -27,7 +27,7 @@ log_init <- function(log_file = NULL) {
   log_line("INFO", paste("R version:", R.version.string))
 }
 
-.log_line <- function(level, msg) {
+log_line <- function(level, msg) {
   line <- paste0("[", pda_timestamp_utc(), "] [", level, "] ", msg)
   message(line)
   if (!is.null(.pda_log_state$file)) {
